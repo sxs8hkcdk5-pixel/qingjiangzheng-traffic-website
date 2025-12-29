@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清江镇交通安全检查登记系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f5ff;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            background-image: 
+                linear-gradient(45deg, rgba(230, 242, 255, 0.8) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(230, 242, 255, 0.8) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(230, 242, 255, 0.8) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(230, 242, 255, 0.8) 75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 87, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 添加一些交通元素装饰 */
+        .traffic-decoration {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.1;
+        }
+        
+        .traffic-decoration::before {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50,10 L90,50 L50,90 L10,50 Z' stroke='%231a5fb4' stroke-width='2' fill='none'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%231a5fb4'/%3E%3C/svg%3E");
+            top: 20px;
+            left: 30px;
+        }
+        
+        .traffic-decoration::after {
+            content: "";
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='20' y='10' width='60' height='80' rx='10' fill='%231a5fb4'/%3E%3Ccircle cx='35' cy='30' r='8' fill='%23ff3333'/%3E%3Ccircle cx='65' cy='30' r='8' fill='%23ffff00'/%3E%3Ccircle cx='50' cy='60' r='8' fill='%2300cc00'/%3E%3C/svg%3E");
+            bottom: 40px;
+            right: 50px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a5fb4 0%, #2d7fe0 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            border-bottom: 5px solid #ffcc00;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        header h1 i {
+            margin-right: 15px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: normal;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 30px;
+            border-right: 1px solid #eee;
+        }
+        
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 30px;
+            background-color: rgba(249, 251, 255, 0.9);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #1a5fb4;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e6f0ff;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccd9ff;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2d7fe0;
+            box-shadow: 0 0 0 3px rgba(45, 127, 224, 0.1);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .photo-area {
+            margin: 25px 0;
+            border: 2px dashed #ccd9ff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background-color: #f9fbff;
+            transition: all 0.3s;
+        }
+        
+        .photo-area:hover {
+            border-color: #2d7fe0;
+            background-color: #f0f5ff;
+        }
+        
+        #photoPreview {
+            width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .photo-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        .primary-btn {
+            background-color: #1a5fb4;
+            color: white;
+            flex: 1;
+        }
+        
+        .primary-btn:hover {
+            background-color: #155094;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 95, 180, 0.2);
+        }
+        
+        .secondary-btn {
+            background-color: #f0f5ff;
+            color: #1a5fb4;
+            border: 1px solid #ccd9ff;
+            flex: 1;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #e6f0ff;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(to right, #1a5fb4, #2d7fe0);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(26, 95, 180, 0.3);
+        }
+        
+        .record-item {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #1a5fb4;
+            transition: all 0.3s;
+        }
+        
+        .record-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .record-name {
+            font-weight: bold;
+            color: #1a5fb4;
+            font-size: 18px;
+        }
+        
+        .record-time {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .record-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .record-detail {
+            margin-bottom: 5px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .violation-info {
+            background-color: #fff8f8;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 3px solid #ff3333;
+        }
+        
+        .violation-label {
+            color: #ff3333;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .record-photo {
+            width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .no-records {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+            font-size: 16px;
+        }
+        
+        .no-records i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ccd9ff;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            background-color: rgba(249, 251, 255, 0.9);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hint {
+            font-size: 14px;
+            color: #777;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .form-section {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+            
+            header h1 {
+                font-size: 22px;
+            }
+        }
+        
+        /* 图标样式 */
+        .icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        .icon-car { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231a5fb4' d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/%3E%3C/svg%3E"); }
+        .icon-camera { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231a5fb4' d='M12 15.2c1.6 0 2.8-1.3 2.8-2.8 0-1.6-1.3-2.8-2.8-2.8-1.6 0-2.8 1.3-2.8 2.8 0 1.6 1.3 2.8 2.8 2.8zM18 4h-2l-2-2H8L6 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-6 14c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z'/%3E%3C/svg%3E"); }
+        .icon-list { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231a5fb4' d='M4 13c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm0 4c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm0-8c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm4 4h12c.55 0 1-.45 1-1s-.45-1-1-1H8c-.55 0-1 .45-1 1s.45 1 1 1zm0 4h12c.55 0 1-.45 1-1s-.45-1-1-1H8c-.55 0-1 .45-1 1s.45 1 1 1zM7 8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1H8c-.55 0-1 .45-1 1zm-3 5c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm0 4c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm0-8c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm4 4h12c.55 0 1-.45 1-1s-.45-1-1-1H8c-.55 0-1 .45-1 1s.45 1 1 1zm0 4h12c.55 0 1-.45 1-1s-.45-1-1-1H8c-.55 0-1 .45-1 1s.45 1 1 1zM7 8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1H8c-.55 0-1 .45-1 1z'/%3E%3C/svg%3E"); }
+        .icon-warning { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ff3333' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3E%3C/svg%3E"); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 交通装饰元素 -->
+        <div class="traffic-decoration"></div>
+        
+        <header>
+            <h1><span class="icon icon-car"></span>清江镇交通安全检查登记系统</h1>
+            <p class="subtitle">交通安全检查与违规登记平台</p>
+        </header>
+        
+        <div class="main-content">
+            <section class="form-section">
+                <h2 class="section-title"><span class="icon icon-car"></span>车辆检查登记</h2>
+                
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label for="name">驾驶员姓名</label>
+                        <input type="text" id="name" placeholder="请输入驾驶员姓名">
+                        <p class="hint">非必填项</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">联系电话</label>
+                        <input type="tel" id="phone" placeholder="请输入联系电话">
+                        <p class="hint">非必填项</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="idCard">身份证号码</label>
+                        <input type="text" id="idCard" placeholder="请输入身份证号码">
+                        <p class="hint">非必填项</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plateNumber">车牌号码</label>
+                        <input type="text" id="plateNumber" placeholder="请输入车牌号码">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="vehicleType">车辆类型</label>
+                        <input type="text" id="vehicleType" placeholder="例如：小型客车、摩托车、货车等">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="violation">车辆违规内容</label>
+                        <textarea id="violation" placeholder="请描述违规情况，如：超速、违停、未系安全带等"></textarea>
+                        <p class="hint">非必填项</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="inspector">检查登记人</label>
+                        <input type="text" id="inspector" placeholder="请输入检查登记人姓名">
+                    </div>
+                    
+                    <div class="photo-area">
+                        <h3><span class="icon icon-camera"></span>车辆拍照留存</h3>
+                        <p class="hint">请上传车辆照片，用于检查记录留存</p>
+                        
+                        <img id="photoPreview" alt="照片预览">
+                        
+                        <div class="photo-buttons">
+                            <button type="button" id="uploadPhoto" class="primary-btn">
+                                <span class="icon icon-camera"></span>上传照片
+                            </button>
+                        </div>
+                        
+                        <input type="file" id="photoUpload" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <span class="icon icon-list"></span>提交检查登记
+                    </button>
+                </form>
+            </section>
+            
+            <section class="preview-section">
+                <h2 class="section-title"><span class="icon icon-list"></span>检查记录</h2>
+                <div id="recordsList">
+                    <div class="no-records">
+                        <span class="icon icon-list" style="width: 48px; height: 48px;"></span>
+                        <p>暂无检查记录</p>
+                        <p class="hint">提交的检查记录将显示在这里</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p>清江镇交通安全检查登记系统 &copy; 2023 | 所有登记信息仅用于交通安全检查管理</p>
+        </footer>
+    </div>
+
+    <script>
+        // 存储检查记录的数组
+        let inspectionRecords = JSON.parse(localStorage.getItem('qingjiangTrafficRecords')) || [];
+        
+        // DOM元素
+        const registrationForm = document.getElementById('registrationForm');
+        const recordsList = document.getElementById('recordsList');
+        const photoUpload = document.getElementById('photoUpload');
+        const photoPreview = document.getElementById('photoPreview');
+        const uploadPhotoBtn = document.getElementById('uploadPhoto');
+        
+        // 当前拍摄的照片（Base64格式）
+        let currentPhoto = null;
+        
+        // 初始化页面时显示已有记录
+        displayRecords();
+        
+        // 表单提交事件
+        registrationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 收集表单数据
+            const formData = {
+                id: Date.now(), // 使用时间戳作为ID
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                idCard: document.getElementById('idCard').value,
+                plateNumber: document.getElementById('plateNumber').value,
+                vehicleType: document.getElementById('vehicleType').value,
+                violation: document.getElementById('violation').value,
+                inspector: document.getElementById('inspector').value,
+                photo: currentPhoto,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            // 添加到记录数组
+            inspectionRecords.unshift(formData);
+            
+            // 保存到本地存储
+            localStorage.setItem('qingjiangTrafficRecords', JSON.stringify(inspectionRecords));
+            
+            // 更新显示
+            displayRecords();
+            
+            // 重置表单
+            registrationForm.reset();
+            photoPreview.style.display = 'none';
+            currentPhoto = null;
+            
+            // 显示成功提示
+            alert('检查登记已提交！');
+        });
+        
+        // 显示记录列表
+        function displayRecords() {
+            if (inspectionRecords.length === 0) {
+                recordsList.innerHTML = `
+                    <div class="no-records">
+                        <span class="icon icon-list" style="width: 48px; height: 48px;"></span>
+                        <p>暂无检查记录</p>
+                        <p class="hint">提交的检查记录将显示在这里</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let recordsHTML = '';
+            
+            inspectionRecords.forEach(record => {
+                recordsHTML += `
+                    <div class="record-item">
+                        <div class="record-header">
+                            <div class="record-name">${record.name || '未登记'}</div>
+                            <div class="record-time">${record.timestamp}</div>
+                        </div>
+                        <div class="record-details">
+                            <div class="record-detail">
+                                <span class="detail-label">车牌：</span>${record.plateNumber || '未登记'}
+                            </div>
+                            <div class="record-detail">
+                                <span class="detail-label">车辆类型：</span>${record.vehicleType || '未登记'}
+                            </div>
+                            <div class="record-detail">
+                                <span class="detail-label">身份证：</span>${record.idCard ? record.idCard.substring(0, 6) + '******' + record.idCard.substring(record.idCard.length - 4) : '未登记'}
+                            </div>
+                            <div class="record-detail">
+                                <span class="detail-label">电话：</span>${record.phone || '未登记'}
+                            </div>
+                            <div class="record-detail">
+                                <span class="detail-label">检查人：</span>${record.inspector || '未登记'}
+                            </div>
+                        </div>
+                        ${record.violation ? `
+                            <div class="violation-info">
+                                <div class="violation-label"><span class="icon icon-warning"></span>违规内容：</div>
+                                <div>${record.violation}</div>
+                            </div>
+                        ` : ''}
+                        ${record.photo ? `<img src="${record.photo}" alt="车辆照片" class="record-photo">` : ''}
+                    </div>
+                `;
+            });
+            
+            recordsList.innerHTML = recordsHTML;
+        }
+        
+        // 上传照片按钮
+        uploadPhotoBtn.addEventListener('click', function() {
+            photoUpload.click();
+        });
+        
+        // 处理照片上传
+        photoUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('请选择图片文件！');
+                return;
+            }
+            
+            // 限制图片大小（最大5MB）
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过5MB！');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                currentPhoto = event.target.result;
+                photoPreview.src = currentPhoto;
+                photoPreview.style.display = 'block';
+            };
+            
+            reader.onerror = function() {
+                alert('图片读取失败，请重试！');
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        // 清除所有记录（用于调试）
+        function clearAllRecords() {
+            if (confirm('确定要清除所有检查记录吗？此操作不可撤销！')) {
+                localStorage.removeItem('qingjiangTrafficRecords');
+                inspectionRecords = [];
+                displayRecords();
+                alert('所有记录已清除！');
+            }
+        }
+        
+        // 在控制台添加清除记录的快捷方式
+        console.log('要清除所有记录，请在控制台执行 clearAllRecords()');
+    </script>
+</body>
+</html>
